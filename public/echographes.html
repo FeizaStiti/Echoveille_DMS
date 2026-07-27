@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Échographes — EchoVeille</title>
+<link rel="icon" type="image/png" href="/img/favicon.png">
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand-block"><img src="/img/logo.png" alt="DMS — Digital Medical Systems"></div>
+    <ul class="nav-list">
+      <li><a href="dashboard.html">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="5" rx="1.5"/><rect x="13" y="12" width="8" height="9" rx="1.5"/><rect x="3" y="14" width="8" height="7" rx="1.5"/></svg>
+        Tableau de bord
+      </a></li>
+      <li><a href="echographes.html" class="active">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16v4"/><path d="M6 8c1 2 2-2 3 0s2-2 3 0 2-2 3 0 2-2 3 0"/></svg>
+        Échographes
+      </a></li>
+      <li><a href="contrats.html">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="1.5"/><path d="M3 9h18M8 3v4M16 3v4"/><path d="M8 14l2.5 2.5L16 11"/></svg>
+        Contrats de maintenance
+      </a></li>
+      <li><a href="interventions.html">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.7 6.3a1 1 0 0 1 0 1.4l-6 6a1 1 0 0 1-1.4 0l-2-2a1 1 0 1 1 1.4-1.4L8 11.6l5.3-5.3a1 1 0 0 1 1.4 0Z"/><path d="M4 4h9M4 4v9M20 15v5h-5M20 20l-5-5"/></svg>
+        Interventions
+      </a></li>
+      <li><a href="equipe.html">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17.5" cy="8.5" r="2.6"/><path d="M15.5 14.2c2.7.4 4.8 2.6 5 5.8"/></svg>
+        Équipe
+      </a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <div data-whoami style="font-size:12px; color:#9fb0cf; margin-bottom:10px; text-align:center;"></div>
+      <button class="logout-btn" data-logout>Se déconnecter</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <h1>Échographes</h1>
+        <p>Parc d'appareils suivis et leurs établissements clients</p>
+      </div>
+      <button class="btn btn-primary" id="openAddBtn">+ Ajouter un échographe</button>
+    </div>
+    <div class="echo-wave" style="margin-bottom:24px;"></div>
+
+    <div class="section-card">
+      <div class="section-body">
+        <table>
+          <thead>
+            <tr>
+              <th>Appareil</th>
+              <th>N° de série</th>
+              <th>Client</th>
+              <th>Installation</th>
+              <th>Garantie</th>
+              <th>Documents</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="echoTableBody">
+            <tr><td colspan="7"><div class="empty-state">Chargement…</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Modal ajout échographe -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Ajouter un échographe</h3>
+      <button class="modal-close" id="closeAddModal">✕</button>
+    </div>
+    <form id="addForm">
+      <div class="modal-body">
+        <div class="field-row">
+          <div class="field">
+            <label for="marque">Marque</label>
+            <input type="text" id="marque" required placeholder="ex. GE Healthcare">
+          </div>
+          <div class="field">
+            <label for="type_appareil">Type / modèle</label>
+            <input type="text" id="type_appareil" required placeholder="ex. Voluson E10">
+          </div>
+        </div>
+        <div class="field">
+          <label for="numero_serie">Numéro de série (S/N)</label>
+          <input type="text" id="numero_serie" required placeholder="ex. VE10-2024-0456">
+        </div>
+
+        <div class="field autocomplete-wrap">
+          <label for="etablissement_nom">Client (établissement)</label>
+          <input type="text" id="etablissement_nom" required placeholder="ex. Clinique Ibn Zohr" autocomplete="off">
+          <div class="autocomplete-list" id="etabSuggestions"></div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="etablissement_type">Type d'établissement</label>
+            <select id="etablissement_type" required>
+              <option value="">Sélectionner…</option>
+              <option value="hopital">Hôpital</option>
+              <option value="clinique">Clinique</option>
+              <option value="cabinet">Cabinet</option>
+              <option value="autre">Autre</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="etablissement_ville">Ville</label>
+            <input type="text" id="etablissement_ville" placeholder="ex. Tunis">
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="date_installation">Date d'installation</label>
+            <input type="date" id="date_installation" required>
+          </div>
+          <div class="field">
+            <label for="garantie_fin">Fin de garantie</label>
+            <input type="date" id="garantie_fin">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Fiche de travail</label>
+          <label class="file-input-label">
+            <input type="file" id="fiche_travail">
+            <span id="ficheLabel">Choisir un fichier (PDF, image…)</span>
+          </label>
+        </div>
+        <div class="field">
+          <label>Bon de livraison</label>
+          <label class="file-input-label">
+            <input type="file" id="bon_livraison">
+            <span id="bonLabel">Choisir un fichier (PDF, image…)</span>
+          </label>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn btn-secondary" id="cancelAddBtn">Annuler</button>
+        <button type="submit" class="btn btn-primary" id="submitAddBtn">Enregistrer l'échographe</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script>
+let echoData = [];
+
+async function loadEchos() {
+  try {
+    echoData = await api('echographes');
+    renderTable();
+  } catch (e) {
+    showToast(e.message, 'error');
+  }
+}
+
+function renderTable() {
+  const body = document.getElementById('echoTableBody');
+  if (echoData.length === 0) {
+    body.innerHTML = '<tr><td colspan="7"><div class="empty-state">Aucun échographe enregistré pour l\'instant.</div></td></tr>';
+    return;
+  }
+  body.innerHTML = echoData.map((e) => `
+    <tr>
+      <td><strong>${e.marque}</strong><br><span class="muted">${e.type_appareil}</span></td>
+      <td class="mono">${e.numero_serie}</td>
+      <td>${e.etablissement_nom}<br><span class="muted">${labelEtabType(e.etablissement_type)}</span></td>
+      <td>${formatDate(e.date_installation)}</td>
+      <td>${e.garantie_fin ? formatDate(e.garantie_fin) : '<span class="muted">—</span>'}</td>
+      <td>
+        ${fileLink(e.fiche_travail_key, e.fiche_travail_nom, 'Fiche')}
+        ${fileLink(e.bon_livraison_key, e.bon_livraison_nom, 'Bon livraison')}
+      </td>
+      <td style="white-space:nowrap;">
+        <a class="btn btn-secondary btn-sm" href="interventions.html?echographe_id=${e.id}&open=1">+ Intervention</a>
+        <button class="btn btn-ghost btn-sm" onclick="openEdit('${e.id}')">Modifier</button>
+        <button class="btn btn-ghost btn-sm" onclick="removeEcho('${e.id}', '${(e.marque + ' ' + e.type_appareil).replace(/'/g, "\\'")}')">Supprimer</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function fileLink(key, nom, label) {
+  if (!key) return `<div class="muted">${label} — non fournie</div>`;
+  return `<a class="file-link" href="/.netlify/functions/download?key=${encodeURIComponent(key)}&nom=${encodeURIComponent(nom)}" target="_blank">⬇ ${label}</a><br>`;
+}
+
+function labelEtabType(t) {
+  return { hopital: 'Hôpital', clinique: 'Clinique', cabinet: 'Cabinet', autre: 'Autre' }[t] || t;
+}
+
+// --- Modal ---
+let editingId = null;
+const addModal = document.getElementById('addModal');
+const modalTitle = document.querySelector('#addModal .modal-head h3');
+const submitBtn = document.getElementById('submitAddBtn');
+const fileFields = document.querySelectorAll('#addForm .file-input-label');
+
+function resetModalToCreateMode() {
+  editingId = null;
+  modalTitle.textContent = 'Ajouter un échographe';
+  submitBtn.textContent = "Enregistrer l'échographe";
+  fileFields.forEach((f) => f.parentElement.style.display = '');
+  document.getElementById('addForm').reset();
+  document.getElementById('ficheLabel').textContent = 'Choisir un fichier (PDF, image…)';
+  document.getElementById('bonLabel').textContent = 'Choisir un fichier (PDF, image…)';
+}
+
+function openEdit(id) {
+  const e = echoData.find((x) => x.id === id);
+  if (!e) return;
+  editingId = id;
+  modalTitle.textContent = "Modifier l'échographe";
+  submitBtn.textContent = 'Enregistrer les modifications';
+  fileFields.forEach((f) => f.parentElement.style.display = 'none');
+
+  document.getElementById('marque').value = e.marque;
+  document.getElementById('type_appareil').value = e.type_appareil;
+  document.getElementById('numero_serie').value = e.numero_serie;
+  document.getElementById('etablissement_nom').value = e.etablissement_nom;
+  document.getElementById('etablissement_type').value = e.etablissement_type;
+  document.getElementById('etablissement_ville').value = e.etablissement_ville || '';
+  document.getElementById('date_installation').value = e.date_installation.slice(0, 10);
+  document.getElementById('garantie_fin').value = e.garantie_fin ? e.garantie_fin.slice(0, 10) : '';
+
+  addModal.classList.add('open');
+}
+
+async function removeEcho(id, nom) {
+  if (!confirm(`Supprimer "${nom}" ? Les contrats de maintenance liés seront aussi supprimés. Cette action est définitive.`)) return;
+  try {
+    await api(`echographes?id=${id}`, { method: 'DELETE' });
+    showToast('Échographe supprimé.');
+    loadEchos();
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+document.getElementById('openAddBtn').addEventListener('click', () => { resetModalToCreateMode(); addModal.classList.add('open'); });
+document.getElementById('closeAddModal').addEventListener('click', () => addModal.classList.remove('open'));
+document.getElementById('cancelAddBtn').addEventListener('click', () => addModal.classList.remove('open'));
+
+document.getElementById('fiche_travail').addEventListener('change', (e) => {
+  document.getElementById('ficheLabel').textContent = e.target.files[0] ? e.target.files[0].name : 'Choisir un fichier (PDF, image…)';
+});
+document.getElementById('bon_livraison').addEventListener('change', (e) => {
+  document.getElementById('bonLabel').textContent = e.target.files[0] ? e.target.files[0].name : 'Choisir un fichier (PDF, image…)';
+});
+
+// --- Autocomplétion établissement ---
+let etabTimer;
+const etabInput = document.getElementById('etablissement_nom');
+const etabList = document.getElementById('etabSuggestions');
+etabInput.addEventListener('input', () => {
+  clearTimeout(etabTimer);
+  const q = etabInput.value.trim();
+  if (!q) { etabList.classList.remove('open'); return; }
+  etabTimer = setTimeout(async () => {
+    try {
+      const results = await api(`etablissements?q=${encodeURIComponent(q)}`);
+      if (results.length === 0) { etabList.classList.remove('open'); return; }
+      etabList.innerHTML = results.map((r) => `<div data-nom="${r.nom}" data-type="${r.type}" data-ville="${r.ville || ''}">${r.nom} <span class="muted">— ${labelEtabType(r.type)}</span></div>`).join('');
+      etabList.classList.add('open');
+    } catch (e) { /* silencieux */ }
+  }, 220);
+});
+etabList.addEventListener('click', (e) => {
+  const target = e.target.closest('div[data-nom]');
+  if (!target) return;
+  etabInput.value = target.dataset.nom;
+  document.getElementById('etablissement_type').value = target.dataset.type;
+  document.getElementById('etablissement_ville').value = target.dataset.ville;
+  etabList.classList.remove('open');
+});
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.autocomplete-wrap')) etabList.classList.remove('open');
+});
+
+// --- Soumission ---
+document.getElementById('addForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('submitAddBtn');
+  btn.disabled = true;
+  btn.textContent = editingId ? 'Enregistrement…' : 'Enregistrement…';
+  try {
+    const basePayload = {
+      marque: document.getElementById('marque').value.trim(),
+      type_appareil: document.getElementById('type_appareil').value.trim(),
+      numero_serie: document.getElementById('numero_serie').value.trim(),
+      etablissement_nom: document.getElementById('etablissement_nom').value.trim(),
+      etablissement_type: document.getElementById('etablissement_type').value,
+      etablissement_ville: document.getElementById('etablissement_ville').value.trim(),
+      date_installation: document.getElementById('date_installation').value,
+      garantie_fin: document.getElementById('garantie_fin').value || null,
+    };
+
+    if (editingId) {
+      await api(`echographes?id=${editingId}`, { method: 'PUT', body: JSON.stringify(basePayload) });
+      showToast('Échographe modifié avec succès.');
+    } else {
+      const ficheFile = document.getElementById('fiche_travail').files[0];
+      const bonFile = document.getElementById('bon_livraison').files[0];
+      const payload = {
+        ...basePayload,
+        fiche_travail: ficheFile ? await fileToBase64(ficheFile) : null,
+        bon_livraison: bonFile ? await fileToBase64(bonFile) : null,
+      };
+      await api('echographes', { method: 'POST', body: JSON.stringify(payload) });
+      showToast('Échographe ajouté avec succès.');
+    }
+
+    addModal.classList.remove('open');
+    resetModalToCreateMode();
+    loadEchos();
+  } catch (err) {
+    showToast(err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = editingId ? 'Enregistrer les modifications' : "Enregistrer l'échographe";
+  }
+});
+
+loadEchos();
+</script>
+</body>
+</html>

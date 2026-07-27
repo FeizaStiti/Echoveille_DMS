@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interventions — EchoVeille</title>
+<link rel="icon" type="image/png" href="/img/favicon.png">
+<link rel="stylesheet" href="/css/styles.css">
+<style>
+  .type-pill { display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600; padding:4px 10px; border-radius:100px; }
+  .type-installation { background:#e7f3ff; color:#0d5fa6; }
+  .type-panne { background:#fbe4e4; color:#b23434; }
+  .type-depannage { background:#fdf1dd; color:#a06a12; }
+  .type-autre { background:#eceef3; color:#4a5568; }
+  .locked-field { background:#f3f6fb; }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand-block"><img src="/img/logo.png" alt="DMS — Digital Medical Systems"></div>
+    <ul class="nav-list">
+      <li><a href="dashboard.html">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="5" rx="1.5"/><rect x="13" y="12" width="8" height="9" rx="1.5"/><rect x="3" y="14" width="8" height="7" rx="1.5"/></svg>
+        Tableau de bord
+      </a></li>
+      <li><a href="echographes.html">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16v4"/><path d="M6 8c1 2 2-2 3 0s2-2 3 0 2-2 3 0 2-2 3 0"/></svg>
+        Échographes
+      </a></li>
+      <li><a href="contrats.html">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="1.5"/><path d="M3 9h18M8 3v4M16 3v4"/><path d="M8 14l2.5 2.5L16 11"/></svg>
+        Contrats de maintenance
+      </a></li>
+      <li><a href="interventions.html" class="active">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.7 6.3a1 1 0 0 1 0 1.4l-6 6a1 1 0 0 1-1.4 0l-2-2a1 1 0 1 1 1.4-1.4L8 11.6l5.3-5.3a1 1 0 0 1 1.4 0Z"/><path d="M4 4h9M4 4v9M20 15v5h-5M20 20l-5-5"/></svg>
+        Interventions
+      </a></li>
+      <li><a href="equipe.html">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17.5" cy="8.5" r="2.6"/><path d="M15.5 14.2c2.7.4 4.8 2.6 5 5.8"/></svg>
+        Équipe
+      </a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <div data-whoami style="font-size:12px; color:#9fb0cf; margin-bottom:10px; text-align:center;"></div>
+      <button class="logout-btn" data-logout>Se déconnecter</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <h1>Interventions</h1>
+        <p>Journal des installations, pannes et dépannages réalisés sur le terrain</p>
+      </div>
+      <button class="btn btn-primary" id="openAddBtn">+ Nouvelle intervention</button>
+    </div>
+    <div class="echo-wave" style="margin-bottom:24px;"></div>
+
+    <div class="section-card">
+      <div class="section-body">
+        <table>
+          <thead>
+            <tr>
+              <th>Appareil</th>
+              <th>Client</th>
+              <th>Type</th>
+              <th>Description</th>
+              <th>Technicien</th>
+              <th>Date</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="interTableBody">
+            <tr><td colspan="7"><div class="empty-state">Chargement…</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Modal nouvelle intervention -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Nouvelle intervention</h3>
+      <button class="modal-close" id="closeAddModal">✕</button>
+    </div>
+    <form id="addForm">
+      <div class="modal-body">
+        <div class="field">
+          <label for="echographe_id">Échographe concerné</label>
+          <select id="echographe_id" required><option value="">Sélectionner un échographe…</option></select>
+        </div>
+        <div class="field">
+          <label for="type_intervention">Type d'intervention</label>
+          <select id="type_intervention" required>
+            <option value="installation">Installation</option>
+            <option value="panne">Panne</option>
+            <option value="depannage">Dépannage</option>
+            <option value="autre">Autre</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="date_intervention">Date</label>
+          <input type="date" id="date_intervention" required>
+        </div>
+        <div class="field">
+          <label for="description">Description (optionnel)</label>
+          <textarea id="description" rows="3" placeholder="ex. Remplacement de la sonde, mise à jour logicielle…"></textarea>
+        </div>
+        <div class="hint" id="autoAttribHint">L'intervention sera enregistrée à votre nom.</div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn btn-secondary" id="cancelAddBtn">Annuler</button>
+        <button type="submit" class="btn btn-primary" id="submitAddBtn">Enregistrer l'intervention</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script>
+let interData = [];
+let echoOptions = [];
+
+const TYPE_LABEL = { installation: 'Installation', panne: 'Panne', depannage: 'Dépannage', autre: 'Autre' };
+
+async function loadEchoOptions() {
+  try {
+    echoOptions = await api('echographes');
+    const select = document.getElementById('echographe_id');
+    select.innerHTML = '<option value="">Sélectionner un échographe…</option>' +
+      echoOptions.map((e) => `<option value="${e.id}">${e.marque} ${e.type_appareil} — S/N ${e.numero_serie} (${e.etablissement_nom})</option>`).join('');
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function loadInterventions() {
+  try {
+    interData = await api('interventions');
+    renderTable();
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+function renderTable() {
+  const body = document.getElementById('interTableBody');
+  if (interData.length === 0) {
+    body.innerHTML = '<tr><td colspan="7"><div class="empty-state">Aucune intervention enregistrée pour l\'instant.</div></td></tr>';
+    return;
+  }
+  body.innerHTML = interData.map((i) => `
+    <tr>
+      <td><strong>${i.marque} ${i.type_appareil}</strong><br><span class="muted mono">S/N ${i.numero_serie}</span></td>
+      <td>${i.etablissement_nom}</td>
+      <td><span class="type-pill type-${i.type_intervention}">${TYPE_LABEL[i.type_intervention] || i.type_intervention}</span></td>
+      <td class="muted">${i.description || '—'}</td>
+      <td>${i.technicien_nom || '<span class="muted">—</span>'}</td>
+      <td>${formatDate(i.date_intervention)}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="removeIntervention('${i.id}')">Supprimer</button></td>
+    </tr>
+  `).join('');
+}
+
+async function removeIntervention(id) {
+  if (!confirm('Supprimer cette intervention ? Cette action est définitive.')) return;
+  try {
+    await api(`interventions?id=${id}`, { method: 'DELETE' });
+    showToast('Intervention supprimée.');
+    loadInterventions();
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+// --- Modal ---
+const addModal = document.getElementById('addModal');
+const echoSelect = document.getElementById('echographe_id');
+
+function openAddModal(prefillEchoId) {
+  document.getElementById('addForm').reset();
+  document.getElementById('date_intervention').value = new Date().toISOString().slice(0, 10);
+  if (prefillEchoId) {
+    echoSelect.value = prefillEchoId;
+    echoSelect.disabled = true;
+    echoSelect.classList.add('locked-field');
+  } else {
+    echoSelect.disabled = false;
+    echoSelect.classList.remove('locked-field');
+  }
+  addModal.classList.add('open');
+}
+
+document.getElementById('openAddBtn').addEventListener('click', () => openAddModal(null));
+document.getElementById('closeAddModal').addEventListener('click', () => addModal.classList.remove('open'));
+document.getElementById('cancelAddBtn').addEventListener('click', () => addModal.classList.remove('open'));
+
+document.getElementById('addForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('submitAddBtn');
+  btn.disabled = true;
+  btn.textContent = 'Enregistrement…';
+  try {
+    await api('interventions', {
+      method: 'POST',
+      body: JSON.stringify({
+        echographe_id: echoSelect.value,
+        type_intervention: document.getElementById('type_intervention').value,
+        date_intervention: document.getElementById('date_intervention').value,
+        description: document.getElementById('description').value.trim(),
+      }),
+    });
+    showToast('Intervention enregistrée.');
+    addModal.classList.remove('open');
+    echoSelect.disabled = false;
+    echoSelect.classList.remove('locked-field');
+    loadInterventions();
+  } catch (err) {
+    showToast(err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Enregistrer l'intervention";
+  }
+});
+
+// --- Init ---
+(async function init() {
+  await loadEchoOptions();
+  await loadInterventions();
+  const params = new URLSearchParams(window.location.search);
+  const echoId = params.get('echographe_id');
+  if (echoId && params.get('open') === '1') {
+    openAddModal(echoId);
+  }
+})();
+</script>
+</body>
+</html>

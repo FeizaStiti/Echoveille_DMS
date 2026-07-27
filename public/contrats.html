@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contrats de maintenance — EchoVeille</title>
+<link rel="icon" type="image/png" href="/img/favicon.png">
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand-block"><img src="/img/logo.png" alt="DMS — Digital Medical Systems"></div>
+    <ul class="nav-list">
+      <li><a href="dashboard.html">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="5" rx="1.5"/><rect x="13" y="12" width="8" height="9" rx="1.5"/><rect x="3" y="14" width="8" height="7" rx="1.5"/></svg>
+        Tableau de bord
+      </a></li>
+      <li><a href="echographes.html">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16v4"/><path d="M6 8c1 2 2-2 3 0s2-2 3 0 2-2 3 0 2-2 3 0"/></svg>
+        Échographes
+      </a></li>
+      <li><a href="contrats.html" class="active">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="1.5"/><path d="M3 9h18M8 3v4M16 3v4"/><path d="M8 14l2.5 2.5L16 11"/></svg>
+        Contrats de maintenance
+      </a></li>
+      <li><a href="interventions.html">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.7 6.3a1 1 0 0 1 0 1.4l-6 6a1 1 0 0 1-1.4 0l-2-2a1 1 0 1 1 1.4-1.4L8 11.6l5.3-5.3a1 1 0 0 1 1.4 0Z"/><path d="M4 4h9M4 4v9M20 15v5h-5M20 20l-5-5"/></svg>
+        Interventions
+      </a></li>
+      <li><a href="equipe.html">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17.5" cy="8.5" r="2.6"/><path d="M15.5 14.2c2.7.4 4.8 2.6 5 5.8"/></svg>
+        Équipe
+      </a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <div data-whoami style="font-size:12px; color:#9fb0cf; margin-bottom:10px; text-align:center;"></div>
+      <button class="logout-btn" data-logout>Se déconnecter</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <h1>Contrats de maintenance</h1>
+        <p>Planning de visites préventives et tout risque, généré automatiquement</p>
+      </div>
+      <button class="btn btn-primary" id="openAddBtn">+ Ajouter un contrat</button>
+    </div>
+    <div class="echo-wave" style="margin-bottom:24px;"></div>
+
+    <div class="section-card">
+      <div class="section-body">
+        <table>
+          <thead>
+            <tr>
+              <th>Appareil</th>
+              <th>Client</th>
+              <th>Type</th>
+              <th>Fréquence</th>
+              <th>Prochaine visite</th>
+              <th>Statut</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="contratsTableBody">
+            <tr><td colspan="7"><div class="empty-state">Chargement…</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Modal ajout contrat -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Ajouter un contrat de maintenance</h3>
+      <button class="modal-close" id="closeAddModal">✕</button>
+    </div>
+    <form id="addForm">
+      <div class="modal-body">
+        <div class="field">
+          <label for="echographe_id">Échographe concerné</label>
+          <select id="echographe_id" required><option value="">Sélectionner un échographe…</option></select>
+        </div>
+
+        <div class="field">
+          <label>Type de contrat</label>
+          <div class="radio-group">
+            <label class="radio-card" data-value="preventif">
+              <input type="radio" name="type_contrat" value="preventif" checked>
+              Préventif
+            </label>
+            <label class="radio-card selected" data-value="tout_risque">
+              <input type="radio" name="type_contrat" value="tout_risque">
+              Tout risque
+            </label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="frequence_par_an">Fréquence des visites</label>
+          <select id="frequence_par_an" required>
+            <option value="2">2 fois par an (tous les 6 mois)</option>
+            <option value="3" selected>3 fois par an (tous les 4 mois)</option>
+            <option value="4">4 fois par an (tous les 3 mois)</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="date_premiere_maintenance">Date de la première maintenance</label>
+          <input type="date" id="date_premiere_maintenance" required>
+          <div class="hint">Les dates suivantes de l'année sont calculées automatiquement à partir de celle-ci.</div>
+        </div>
+
+        <div class="field" id="previewWrap" style="display:none;">
+          <div class="preview-box">
+            <div class="p-title">Aperçu du planning</div>
+            <div class="preview-list" id="previewList"></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn btn-secondary" id="cancelAddBtn">Annuler</button>
+        <button type="submit" class="btn btn-primary" id="submitAddBtn">Créer le contrat</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal détail / timeline -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="detailTitle">Détail du contrat</h3>
+      <button class="modal-close" id="closeDetailModal">✕</button>
+    </div>
+    <div class="modal-body" id="detailBody"></div>
+    <div class="modal-foot" id="detailFoot"></div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script src="/js/schedule-preview.js"></script>
+<script>
+let contratsData = [];
+
+async function loadEchoOptions() {
+  try {
+    const echos = await api('echographes');
+    const select = document.getElementById('echographe_id');
+    select.innerHTML = '<option value="">Sélectionner un échographe…</option>' +
+      echos.map((e) => `<option value="${e.id}">${e.marque} ${e.type_appareil} — S/N ${e.numero_serie} (${e.etablissement_nom})</option>`).join('');
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function loadContrats() {
+  try {
+    contratsData = await api('contrats');
+    renderTable();
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+function renderTable() {
+  const body = document.getElementById('contratsTableBody');
+  if (contratsData.length === 0) {
+    body.innerHTML = '<tr><td colspan="7"><div class="empty-state">Aucun contrat pour l\'instant.</div></td></tr>';
+    return;
+  }
+  body.innerHTML = contratsData.map((c) => `
+    <tr>
+      <td><strong>${c.marque} ${c.type_appareil}</strong><br><span class="muted mono">S/N ${c.numero_serie}</span></td>
+      <td>${c.etablissement_nom}</td>
+      <td><span class="badge ${c.type_contrat === 'preventif' ? 'badge-navy' : 'badge-amber'}">${c.type_contrat === 'preventif' ? 'Préventif' : 'Tout risque'}</span></td>
+      <td>${c.frequence_par_an}x / an</td>
+      <td>${c.prochaine_visite ? formatDate(c.prochaine_visite) : '<span class="muted">Terminé</span>'}</td>
+      <td><span class="badge ${statutBadge(c.statut)}">${statutLabel(c.statut)}</span></td>
+      <td><button class="btn btn-ghost btn-sm" onclick="openDetail('${c.id}')">Voir le planning →</button></td>
+    </tr>
+  `).join('');
+}
+
+function statutBadge(s) { return { actif: 'badge-green', expire: 'badge-gray', renouvele: 'badge-navy' }[s] || 'badge-gray'; }
+function statutLabel(s) { return { actif: 'Actif', expire: 'Expiré', renouvele: 'Renouvelé' }[s] || s; }
+
+// --- Modal ajout ---
+const addModal = document.getElementById('addModal');
+document.getElementById('openAddBtn').addEventListener('click', () => { resetContractModalToCreateMode(); addModal.classList.add('open'); });
+document.getElementById('closeAddModal').addEventListener('click', () => { addModal.classList.remove('open'); resetContractModalToCreateMode(); });
+document.getElementById('cancelAddBtn').addEventListener('click', () => { addModal.classList.remove('open'); resetContractModalToCreateMode(); });
+
+document.querySelectorAll('.radio-card').forEach((card) => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('.radio-card').forEach((c) => c.classList.remove('selected'));
+    card.classList.add('selected');
+    card.querySelector('input').checked = true;
+  });
+});
+
+function updatePreview() {
+  const date = document.getElementById('date_premiere_maintenance').value;
+  const freq = Number(document.getElementById('frequence_par_an').value);
+  const wrap = document.getElementById('previewWrap');
+  if (!date) { wrap.style.display = 'none'; return; }
+  const dates = generateVisitDatesPreview(date, freq);
+  document.getElementById('previewList').innerHTML = dates.map((d, i) => `<span><span>Visite ${i + 1}</span><span>${formatDate(d)}</span></span>`).join('');
+  wrap.style.display = 'block';
+}
+document.getElementById('date_premiere_maintenance').addEventListener('change', updatePreview);
+document.getElementById('frequence_par_an').addEventListener('change', updatePreview);
+
+document.getElementById('addForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('submitAddBtn');
+  btn.disabled = true;
+  btn.textContent = editingContratId ? 'Enregistrement…' : 'Création…';
+  try {
+    if (editingContratId) {
+      const payload = {
+        action: 'modifier',
+        contrat_id: editingContratId,
+        type_contrat: document.querySelector('input[name=type_contrat]:checked').value,
+        frequence_par_an: Number(document.getElementById('frequence_par_an').value),
+        date_premiere_maintenance: document.getElementById('date_premiere_maintenance').value,
+      };
+      await api('contrats', { method: 'POST', body: JSON.stringify(payload) });
+      showToast('Contrat modifié, planning régénéré.');
+    } else {
+      const payload = {
+        echographe_id: document.getElementById('echographe_id').value,
+        type_contrat: document.querySelector('input[name=type_contrat]:checked').value,
+        frequence_par_an: Number(document.getElementById('frequence_par_an').value),
+        date_premiere_maintenance: document.getElementById('date_premiere_maintenance').value,
+      };
+      await api('contrats', { method: 'POST', body: JSON.stringify(payload) });
+      showToast('Contrat créé et planning généré.');
+    }
+    addModal.classList.remove('open');
+    resetContractModalToCreateMode();
+    loadContrats();
+  } catch (err) {
+    showToast(err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = editingContratId ? 'Enregistrer les modifications' : 'Créer le contrat';
+  }
+});
+
+// --- Modal détail / timeline ---
+const detailModal = document.getElementById('detailModal');
+document.getElementById('closeDetailModal').addEventListener('click', () => detailModal.classList.remove('open'));
+
+async function openDetail(id) {
+  detailModal.classList.add('open');
+  document.getElementById('detailBody').innerHTML = '<div class="empty-state">Chargement…</div>';
+  document.getElementById('detailFoot').innerHTML = '';
+  try {
+    const c = await api(`contrats?id=${id}`);
+    document.getElementById('detailTitle').textContent = `${c.marque} ${c.type_appareil} — ${c.etablissement_nom}`;
+    document.getElementById('detailBody').innerHTML = `
+      <div class="muted" style="margin-bottom:14px;">
+        Contrat ${c.type_contrat === 'preventif' ? 'préventif' : 'tout risque'} · ${c.frequence_par_an}x / an ·
+        statut : <span class="badge ${statutBadge(c.statut)}">${statutLabel(c.statut)}</span>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        ${c.maintenances.map((m) => `
+          <div class="alert-row" style="border:1px solid var(--border); border-radius:8px;">
+            <div>
+              <div class="who">Visite ${m.numero_visite}</div>
+              <div class="meta">Prévue le ${formatDate(m.date_prevue)}${m.date_effective ? ' · effectuée le ' + formatDate(m.date_effective) : ''}</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span class="badge ${m.statut === 'fait' ? 'badge-green' : m.statut === 'retard' ? 'badge-red' : 'badge-navy'}">${m.statut === 'fait' ? 'Effectuée' : m.statut === 'retard' ? 'En retard' : 'À venir'}</span>
+              ${m.statut !== 'fait' ? `<button class="btn btn-secondary btn-sm" onclick="markDone('${m.id}', '${id}')">Marquer effectuée</button>` : ''}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+    document.getElementById('detailFoot').innerHTML = `
+      <button class="btn btn-secondary" onclick="detailModal.classList.remove('open')">Fermer</button>
+      <button class="btn btn-ghost" onclick="deleteContract('${id}')">Supprimer</button>
+      <button class="btn btn-secondary" onclick="openEditContract('${id}')">Modifier</button>
+      <button class="btn btn-primary" onclick="renewContract('${id}')">Renouveler le contrat</button>
+    `;
+  } catch (e) {
+    document.getElementById('detailBody').innerHTML = `<div class="empty-state">${e.message}</div>`;
+  }
+}
+
+async function markDone(maintenanceId, contratId) {
+  try {
+    await api('contrats', { method: 'POST', body: JSON.stringify({ action: 'marquer_fait', maintenance_id: maintenanceId }) });
+    showToast('Visite marquée comme effectuée.');
+    openDetail(contratId);
+    loadContrats();
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function renewContract(contratId) {
+  const date = prompt('Date de la première maintenance du nouveau contrat (AAAA-MM-JJ) :');
+  if (!date) return;
+  try {
+    await api('contrats', { method: 'POST', body: JSON.stringify({ action: 'renouveler', contrat_id: contratId, date_premiere_maintenance: date }) });
+    showToast('Contrat renouvelé, nouveau planning généré.');
+    detailModal.classList.remove('open');
+    loadContrats();
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function deleteContract(contratId) {
+  if (!confirm('Supprimer ce contrat et tout son planning de maintenance ? Cette action est définitive.')) return;
+  try {
+    await api('contrats', { method: 'POST', body: JSON.stringify({ action: 'supprimer', contrat_id: contratId }) });
+    showToast('Contrat supprimé.');
+    detailModal.classList.remove('open');
+    loadContrats();
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+let editingContratId = null;
+
+async function openEditContract(contratId) {
+  try {
+    const c = await api(`contrats?id=${contratId}`);
+    editingContratId = contratId;
+    document.querySelector('#addModal .modal-head h3').textContent = 'Modifier le contrat';
+    document.getElementById('submitAddBtn').textContent = 'Enregistrer les modifications';
+    document.getElementById('echographe_id').closest('.field').style.display = 'none';
+
+    document.querySelectorAll('.radio-card').forEach((card) => {
+      const match = card.dataset.value === c.type_contrat;
+      card.classList.toggle('selected', match);
+      card.querySelector('input').checked = match;
+    });
+    document.getElementById('frequence_par_an').value = c.frequence_par_an;
+    document.getElementById('date_premiere_maintenance').value = c.date_premiere_maintenance.slice(0, 10);
+    updatePreview();
+
+    detailModal.classList.remove('open');
+    addModal.classList.add('open');
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+function resetContractModalToCreateMode() {
+  editingContratId = null;
+  document.querySelector('#addModal .modal-head h3').textContent = 'Ajouter un contrat de maintenance';
+  document.getElementById('submitAddBtn').textContent = 'Créer le contrat';
+  document.getElementById('echographe_id').closest('.field').style.display = '';
+  document.getElementById('addForm').reset();
+  document.getElementById('previewWrap').style.display = 'none';
+}
+
+loadEchoOptions();
+loadContrats().then(() => {
+  const params = new URLSearchParams(window.location.search);
+  const openId = params.get('open');
+  if (openId) openDetail(openId);
+});
+</script>
+</body>
+</html>

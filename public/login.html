@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Connexion — EchoVeille</title>
+<link rel="icon" type="image/png" href="/img/favicon.png">
+<link rel="stylesheet" href="/css/styles.css">
+<style>
+  body.login-body {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(circle at 20% 20%, #0d3670 0%, #071f3d 55%, #050f1e 100%);
+    padding: 20px;
+  }
+  .login-card {
+    background: #fff; border-radius: 16px; width: 100%; max-width: 380px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.35); overflow: hidden;
+  }
+  .login-brand { padding: 30px 30px 14px; text-align: center; }
+  .login-brand img { max-width: 200px; }
+  .login-form { padding: 10px 30px 30px; }
+  .login-form h1 { font-size: 18px; text-align: center; margin-bottom: 4px; }
+  .login-form p.sub { text-align: center; color: var(--ink-soft); font-size: 13.5px; margin: 0 0 22px; }
+  .login-error { background: var(--red-bg); color: var(--red-dark); font-size: 13px; padding: 10px 12px; border-radius: 8px; margin-bottom: 14px; display: none; }
+  .login-error.show { display: block; }
+  .login-form .btn { width: 100%; justify-content: center; margin-top: 6px; }
+</style>
+</head>
+<body class="login-body">
+  <div class="login-card">
+    <div class="login-brand">
+      <img src="/img/logo.png" alt="DMS — Digital Medical Systems">
+    </div>
+    <div class="echo-wave"></div>
+    <form class="login-form" id="loginForm">
+      <h1>EchoVeille</h1>
+      <p class="sub">Suivi des échographes &amp; contrats de maintenance</p>
+      <div class="login-error" id="loginError">Identifiants incorrects.</div>
+      <div class="field">
+        <label for="nom_utilisateur">Nom d'utilisateur</label>
+        <input type="text" id="nom_utilisateur" name="nom_utilisateur" placeholder="ex. feiza" required autofocus autocomplete="username">
+      </div>
+      <div class="field">
+        <label for="password">Mot de passe</label>
+        <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn btn-primary" id="loginBtn">Se connecter</button>
+      <p style="text-align:center; margin-top:16px; font-size:12.5px;">
+        <a href="/setup.html" style="color: var(--ink-soft);">Première utilisation ? Créer le compte administrateur</a>
+      </p>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById('loginForm');
+    const errorBox = document.getElementById('loginError');
+    const btn = document.getElementById('loginBtn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorBox.classList.remove('show');
+      btn.disabled = true;
+      btn.textContent = 'Connexion…';
+      try {
+        const nom_utilisateur = document.getElementById('nom_utilisateur').value;
+        const password = document.getElementById('password').value;
+        const res = await fetch('/.netlify/functions/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nom_utilisateur, password }),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || 'bad');
+        }
+        window.location.href = '/dashboard.html';
+      } catch (err) {
+        errorBox.textContent = err.message === 'bad' ? 'Identifiants incorrects.' : err.message;
+        errorBox.classList.add('show');
+        btn.disabled = false;
+        btn.textContent = 'Se connecter';
+      }
+    });
+  </script>
+</body>
+</html>

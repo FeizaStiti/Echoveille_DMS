@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Configuration initiale — EchoVeille</title>
+<link rel="icon" type="image/png" href="/img/favicon.png">
+<link rel="stylesheet" href="/css/styles.css">
+<style>
+  body.login-body {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(circle at 20% 20%, #0d3670 0%, #071f3d 55%, #050f1e 100%);
+    padding: 20px;
+  }
+  .login-card { background: #fff; border-radius: 16px; width: 100%; max-width: 420px; box-shadow: 0 30px 80px rgba(0,0,0,0.35); overflow: hidden; }
+  .login-brand { padding: 30px 30px 14px; text-align: center; }
+  .login-brand img { max-width: 200px; }
+  .login-form { padding: 10px 30px 30px; }
+  .login-form h1 { font-size: 18px; text-align: center; margin-bottom: 4px; }
+  .login-form p.sub { text-align: center; color: var(--ink-soft); font-size: 13.5px; margin: 0 0 22px; }
+  .login-error { background: var(--red-bg); color: var(--red-dark); font-size: 13px; padding: 10px 12px; border-radius: 8px; margin-bottom: 14px; display: none; }
+  .login-error.show { display: block; }
+  .login-success { background: var(--green-bg); color: var(--green); font-size: 13px; padding: 10px 12px; border-radius: 8px; margin-bottom: 14px; display: none; }
+  .login-success.show { display: block; }
+  .login-form .btn { width: 100%; justify-content: center; margin-top: 6px; }
+</style>
+</head>
+<body class="login-body">
+  <div class="login-card">
+    <div class="login-brand"><img src="/img/logo.png" alt="DMS — Digital Medical Systems"></div>
+    <div class="echo-wave"></div>
+    <form class="login-form" id="setupForm">
+      <h1>Configuration initiale</h1>
+      <p class="sub">Créez le tout premier compte administrateur. Cette page ne fonctionne qu'une seule fois.</p>
+      <div class="login-error" id="setupError"></div>
+      <div class="login-success" id="setupSuccess">Compte créé ! Redirection vers la connexion…</div>
+      <div class="field">
+        <label for="nom_complet">Votre nom complet</label>
+        <input type="text" id="nom_complet" required placeholder="ex. Feiza Stiti">
+      </div>
+      <div class="field">
+        <label for="nom_utilisateur">Nom d'utilisateur</label>
+        <input type="text" id="nom_utilisateur" required placeholder="ex. feiza" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="password">Mot de passe</label>
+        <input type="password" id="password" required placeholder="6 caractères minimum">
+      </div>
+      <button type="submit" class="btn btn-primary" id="setupBtn">Créer le compte administrateur</button>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById('setupForm');
+    const errorBox = document.getElementById('setupError');
+    const successBox = document.getElementById('setupSuccess');
+    const btn = document.getElementById('setupBtn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorBox.classList.remove('show');
+      btn.disabled = true;
+      btn.textContent = 'Création…';
+      try {
+        const res = await fetch('/.netlify/functions/setup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nom_complet: document.getElementById('nom_complet').value,
+            nom_utilisateur: document.getElementById('nom_utilisateur').value,
+            password: document.getElementById('password').value,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Erreur inconnue');
+        successBox.classList.add('show');
+        setTimeout(() => { window.location.href = '/login.html'; }, 1500);
+      } catch (err) {
+        errorBox.textContent = err.message;
+        errorBox.classList.add('show');
+        btn.disabled = false;
+        btn.textContent = 'Créer le compte administrateur';
+      }
+    });
+  </script>
+</body>
+</html>
