@@ -2,14 +2,23 @@ const { createClient } = require('@supabase/supabase-js');
 const { requireAuth } = require('./utils/auth');
 const { query } = require('./utils/db');
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+let supabase;
+function getSupabase() {
+  if (!supabase) {
+    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
+      throw new Error('SUPABASE_URL / SUPABASE_SERVICE_KEY manquant. Ajoutez-les dans les variables d\'environnement de votre hébergeur pour activer le stockage des fichiers joints.');
+    }
+    supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+  }
+  return supabase;
+}
 const BUCKET = 'echoveille-files';
 
 async function saveFile(base64File, prefix) {
   if (!base64File || !base64File.data) return { key: null, nom: null };
   const key = `${prefix}-${Date.now()}-${base64File.nom.replace(/[^a-zA-Z0-9.\-_]/g, '_')}`;
   const buffer = Buffer.from(base64File.data, 'base64');
-  const { error } = await supabase.storage.from(BUCKET).upload(key, buffer, {
+  const { error } = await getSupabase().storage.from(BUCKET).upload(key, buffer, {
     contentType: base64File.type || 'application/octet-stream',
     upsert: false,
   });
