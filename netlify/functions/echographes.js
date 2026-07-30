@@ -85,14 +85,21 @@ exports.handler = async (event) => {
     }
 
     try {
-      let etabResult = await query(`select id from etablissements where nom = $1`, [etablissement_nom]);
+      const marqueNormalisee = marque.trim();
+      const typeNormalise = type_appareil.trim();
+      const serieNormalisee = numero_serie.trim();
+      const nomNormalise = etablissement_nom.trim();
+      let etabResult = await query(
+        `select id from etablissements where lower(trim(nom)) = lower($1)`,
+        [nomNormalise]
+      );
       let etablissementId;
       if (etabResult.rows.length > 0) {
         etablissementId = etabResult.rows[0].id;
       } else {
         const inserted = await query(
           `insert into etablissements (nom, type, ville) values ($1, $2, $3) returning id`,
-          [etablissement_nom, etablissement_type, etablissement_ville || null]
+          [nomNormalise, etablissement_type, etablissement_ville || null]
         );
         etablissementId = inserted.rows[0].id;
       }
@@ -106,7 +113,7 @@ exports.handler = async (event) => {
            fiche_travail_key, fiche_travail_nom, bon_livraison_key, bon_livraison_nom)
          values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
          returning id`,
-        [marque, type_appareil, numero_serie, etablissementId, date_installation, garantie_fin || null,
+        [marqueNormalisee, typeNormalise, serieNormalisee, etablissementId, date_installation, garantie_fin || null,
          ficheSaved.key, ficheSaved.nom, bonSaved.key, bonSaved.nom]
       );
 
@@ -142,7 +149,11 @@ exports.handler = async (event) => {
     }
 
     try {
-      let etabResult = await query(`select id from etablissements where nom = $1`, [etablissement_nom]);
+      const nomNormalise = etablissement_nom.trim();
+      let etabResult = await query(
+        `select id from etablissements where lower(trim(nom)) = lower($1)`,
+        [nomNormalise]
+      );
       let etablissementId;
       if (etabResult.rows.length > 0) {
         etablissementId = etabResult.rows[0].id;
@@ -152,7 +163,7 @@ exports.handler = async (event) => {
       } else {
         const inserted = await query(
           `insert into etablissements (nom, type, ville) values ($1, $2, $3) returning id`,
-          [etablissement_nom, etablissement_type, etablissement_ville || null]
+          [nomNormalise, etablissement_type, etablissement_ville || null]
         );
         etablissementId = inserted.rows[0].id;
       }
@@ -160,7 +171,7 @@ exports.handler = async (event) => {
       await query(
         `update echographes set marque=$1, type_appareil=$2, numero_serie=$3, etablissement_id=$4,
          date_installation=$5, garantie_fin=$6 where id=$7`,
-        [marque, type_appareil, numero_serie, etablissementId, date_installation, garantie_fin || null, id]
+        [marque.trim(), type_appareil.trim(), numero_serie.trim(), etablissementId, date_installation, garantie_fin || null, id]
       );
 
       return { statusCode: 200, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ok: true }) };
