@@ -103,7 +103,7 @@
       </a>
     </div>
 
-    <div class="section-card">
+    <div class="section-card" id="alertSection">
       <div class="section-head">
         <h3>⏰ Maintenances prévues sous 48h</h3>
         <span class="badge badge-amber" id="alertCount">0</span>
@@ -111,7 +111,7 @@
       <div class="section-body" id="alertList"><div class="empty-state">Chargement…</div></div>
     </div>
 
-    <div class="section-card">
+    <div class="section-card" id="lateSection">
       <div class="section-head">
         <h3>🔴 Maintenances en retard</h3>
         <span class="badge badge-red" id="lateCount">0</span>
@@ -119,7 +119,7 @@
       <div class="section-body" id="lateList"><div class="empty-state">Chargement…</div></div>
     </div>
 
-    <div class="section-card">
+    <div class="section-card" id="activitySection">
       <div class="section-head">
         <h3>🕓 Activité récente</h3>
       </div>
@@ -147,6 +147,9 @@ async function load() {
     renderActivity(data.activites || []);
   } catch (e) {
     showToast(e.message, 'error');
+    document.getElementById('alertSection').style.display = '';
+    document.getElementById('lateSection').style.display = '';
+    document.getElementById('activitySection').style.display = '';
     document.getElementById('alertList').innerHTML = `<div class="empty-state">${e.message}</div>`;
     document.getElementById('lateList').innerHTML = `<div class="empty-state">${e.message}</div>`;
     document.getElementById('activityFeed').innerHTML = `<div class="empty-state">${e.message}</div>`;
@@ -155,11 +158,13 @@ async function load() {
 
 function renderAlertList(listId, countId, items, sevClass) {
   document.getElementById(countId).textContent = items.length;
+  const section = document.getElementById(listId === 'alertList' ? 'alertSection' : 'lateSection');
   const el = document.getElementById(listId);
   if (items.length === 0) {
-    el.innerHTML = '<div class="empty-state">Rien à signaler pour le moment — tout est à jour.</div>';
+    section.style.display = 'none';
     return;
   }
+  section.style.display = '';
   const icone = sevClass === 'sev-red' ? '⚠️' : '⏰';
   el.innerHTML = items.map((m) => {
     const jours = daysUntil(m.date_prevue);
@@ -202,11 +207,13 @@ function timeAgo(iso) {
 }
 
 function renderActivity(items) {
+  const section = document.getElementById('activitySection');
   const el = document.getElementById('activityFeed');
   if (items.length === 0) {
-    el.innerHTML = '<div class="empty-state">Aucune activité récente. Les interventions et visites effectuées apparaîtront ici.</div>';
+    section.style.display = 'none';
     return;
   }
+  section.style.display = '';
   el.innerHTML = items.map((a) => `
     <div class="activity-item">
       <div class="activity-avatar">${initials(a.technicien_nom)}</div>
@@ -219,6 +226,15 @@ function renderActivity(items) {
 }
 
 load();
+
+// Si la page est restaurée depuis le cache du navigateur (ex: bouton "Précédent"
+// après avoir marqué une maintenance comme effectuée), on recharge les données
+// fraîches pour que les notifications (retards, alertes 48h) soient toujours à jour.
+window.addEventListener('pageshow', (event) => {
+  if (event.persisted) {
+    load();
+  }
+});
 </script>
 </body>
 </html>
