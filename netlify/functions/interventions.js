@@ -1,7 +1,7 @@
 const { requireAuth, getSessionUser } = require('./utils/auth');
 const { query } = require('./utils/db');
 
-const TYPES_VALIDES = ['installation', 'panne', 'depannage', 'autre'];
+const TYPES_VALIDES = ['installation', 'panne', 'depannage', 'maintenance', 'autre'];
 
 exports.handler = async (event) => {
   const authError = requireAuth(event);
@@ -55,6 +55,7 @@ exports.handler = async (event) => {
     const user = getSessionUser(event);
 
     try {
+      const dateEffective = date_intervention || new Date().toISOString().slice(0, 10);
       const inserted = await query(
         `insert into interventions (echographe_id, technicien_id, type_intervention, description, date_intervention)
          values ($1,$2,$3,$4,$5) returning id`,
@@ -63,10 +64,39 @@ exports.handler = async (event) => {
           user ? user.id : null,
           type_intervention,
           (description || '').trim() || null,
-          date_intervention || new Date().toISOString().slice(0, 10),
+          dateEffective,
         ]
       );
-      return { statusCode: 201, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: inserted.rows[0].id }) };
+
+      let maintenanceCloturee = null;
+      if (type_intervention === 'maintenance') {
+        // On referme automatiquement la visite de maintenance planifiée la plus
+        // ancienne (en retard ou à venir) pour cet échographe, afin d'éviter un
+        // double suivi : l'intervention et la maintenance planifiée ne font plus
+        // qu'un seul point de vérité, et la notification associée disparaît.
+        const pending = await query(
+          `select m.id
+           from maintenances m
+           join contrats c on c.id = m.contrat_id
+           where c.echographe_id = $1 and m.statut in ('a_venir', 'retard')
+           order by m.date_prevue asc
+           limit 1`,
+          [echographe_id]
+        );
+        if (pending.rows.length > 0) {
+          await query(
+            `update maintenances set statut = 'fait', date_effective = $1, technicien_id = $2 where id = $3`,
+            [dateEffective, user ? user.id : null, pending.rows[0].id]
+          );
+          maintenanceCloturee = pending.rows[0].id;
+        }
+      }
+
+      return {
+        statusCode: 201,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: inserted.rows[0].id, maintenance_cloturee: maintenanceCloturee }),
+      };
     } catch (e) {
       console.error('ERREUR FONCTION:', e);
       return { statusCode: 500, body: JSON.stringify({ error: e.message }) };
