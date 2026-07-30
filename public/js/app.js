@@ -48,7 +48,7 @@ function formatDate(iso) {
 function daysUntil(iso) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const target = new Date(iso + 'T00:00:00');
+  const target = new Date(iso.slice(0, 10) + 'T00:00:00');
   return Math.round((target - today) / 86400000);
 }
 
